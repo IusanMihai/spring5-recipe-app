@@ -46,6 +46,23 @@ class RecipeServiceImplTest {
     }
 
     @Test
+    void getRecipeByIdTest() {
+        //given
+        Long recipeId = 1L;
+        Recipe givenRecipe = new Recipe();
+        givenRecipe.setId(recipeId);
+        Optional<Recipe> optionalRecipe = Optional.of(givenRecipe);
+        when(recipeRepository.findById(recipeId)).thenReturn(optionalRecipe);
+        //when
+        Recipe returnedRecipe = recipeService.findById(recipeId);
+        //then
+        assertNotNull(returnedRecipe, "Null Recipe Returned");
+        assertEquals(givenRecipe, returnedRecipe);
+        verify(recipeRepository, times(1)).findById(recipeId);
+        verify(recipeRepository, never()).findAll();
+    }
+
+    @Test
     void findById() {
         //given
         Long recipeId = 1L;
