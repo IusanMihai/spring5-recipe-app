@@ -50,6 +50,12 @@ public class RecipeServiceImpl implements RecipeService{
 
     @Override
     @Transactional
+    public RecipeCommand findCommandById(Long l) {
+        return recipeToRecipeCommand.convert(findById(l));
+    }
+
+    @Override
+    @Transactional
     public RecipeCommand saveRecipeCommand(RecipeCommand recipeCommand) {
         //detached from hibernate context
         Recipe detachedRecipe = recipeCommandToRecipe.convert(recipeCommand);
@@ -58,5 +64,10 @@ public class RecipeServiceImpl implements RecipeService{
             return recipeToRecipeCommand.convert(savedRecipe);
         }
         return null;
+    }
+
+    @Override
+    public void deleteById(Long idToDelete) {
+        recipeRepository.deleteById(idToDelete);
     }
 }
