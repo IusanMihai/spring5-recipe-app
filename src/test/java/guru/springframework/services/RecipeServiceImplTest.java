@@ -1,5 +1,6 @@
 package guru.springframework.services;
 
+import guru.springframework.commands.RecipeCommand;
 import guru.springframework.converters.*;
 import guru.springframework.domain.Recipe;
 import guru.springframework.repositories.RecipeRepository;
@@ -16,41 +17,23 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class RecipeServiceImplTest {
-
-    RecipeServiceImpl recipeService;
-
     @Mock
     RecipeRepository recipeRepository;
+    @Mock
+    RecipeToRecipeCommand recipeToRecipeCommand;
+    @Mock
+    RecipeCommandToRecipe recipeCommandToRecipe;
+
+    RecipeServiceImpl recipeService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
 
-        recipeService = new RecipeServiceImpl(recipeRepository,
-                new RecipeCommandToRecipe(new CategoryCommandToCategory(),
-                        new IngredientCommandToIngredient(new UnitOfMeasureCommandToUnitOfMeasure()),
-                        new NotesCommandToNotes()),
-                new RecipeToRecipeCommand(new CategoryToCategoryCommand(),
-                        new IngredientToIngredientCommand(new UnitOfMeasureToUnitOfMeasureCommand()),
-                        new NotesToNotesCommand()));
+        recipeService = new RecipeServiceImpl(recipeRepository, recipeCommandToRecipe, recipeToRecipeCommand);
     }
 
-    @Test
-    void getRecipes() {
 
-        Recipe recipe = new Recipe();
-        HashSet<Recipe> recipesData = new HashSet<>();
-        recipesData.add(recipe);
-
-        when(recipeRepository.findAll()).thenReturn(recipesData);
-
-        Set<Recipe> recipes = recipeService.getRecipes();
-
-        assertEquals(1, recipes.size());
-
-        // verify how many times was recipeRepository.findAll was called
-        verify(recipeRepository, times(1)).findAll();
-    }
 
     @Test
     void getRecipeByIdTest() {
@@ -65,12 +48,50 @@ class RecipeServiceImplTest {
         //then
         assertNotNull(returnedRecipe, "Null Recipe Returned");
         assertEquals(givenRecipe, returnedRecipe);
-        verify(recipeRepository, times(1)).findById(recipeId);
+        verify(recipeRepository, times(1)).findById(anyLong());
         verify(recipeRepository, never()).findAll();
     }
 
     @Test
-    void findById() {
+    public void getRecipeCommandByIdTest() throws Exception {
+        Recipe recipe = new Recipe();
+        recipe.setId(1L);
+        Optional<Recipe> recipeOptional = Optional.of(recipe);
+
+        when(recipeRepository.findById(anyLong())).thenReturn(recipeOptional);
+
+        RecipeCommand recipeCommand = new RecipeCommand();
+        recipeCommand.setId(1L);
+
+        when(recipeToRecipeCommand.convert(any())).thenReturn(recipeCommand);
+
+        RecipeCommand commandById = recipeService.findCommandById(1L);
+
+        assertNotNull(commandById, "Null recipe returned");
+        verify(recipeRepository, times(1)).findById(anyLong());
+        verify(recipeRepository, never()).findAll();
+    }
+
+    @Test
+    void getRecipesTest() {
+
+        Recipe recipe = new Recipe();
+        HashSet<Recipe> recipesData = new HashSet<>();
+        recipesData.add(recipe);
+
+        when(recipeRepository.findAll()).thenReturn(recipesData);
+
+        Set<Recipe> recipes = recipeService.getRecipes();
+
+        assertEquals(1, recipes.size());
+
+        // verify how many times was recipeRepository.findAll was called
+        verify(recipeRepository, times(1)).findAll();
+        verify(recipeRepository, never()).findById(anyLong());
+    }
+
+    @Test
+    void findByIdTest() {
         //given
         Long recipeId = 1L;
         Recipe givenRecipe = new Recipe();
@@ -81,6 +102,18 @@ class RecipeServiceImplTest {
         Recipe recipe = recipeService.findById(recipeId);
         //then
         assertEquals(givenRecipe, recipe);
-        verify(recipeRepository, times(1)).findById(recipeId);
+        verify(recipeRepository, times(1)).findById(anyLong());
+    }
+
+    @Test
+    void testDeleteById() {
+        //given
+        Long idToDelete = 2L;
+
+        //when
+        recipeService.deleteById(idToDelete);
+
+        //then
+        verify(recipeRepository).deleteById(anyLong());
     }
 }
