@@ -19,16 +19,12 @@ class CategoryTest {
         Long idValue = 4L;
 
         category.setId(idValue);
+
         assertEquals(idValue, category.getId());
     }
 
     @Test
-    void getDescription() {
-        String description = "Short description";
-
-        category.setDescription(description);
-
-        assertEquals(description,category.getDescription());
+    public void getDescription() throws Exception {
     }
 
     @Test
